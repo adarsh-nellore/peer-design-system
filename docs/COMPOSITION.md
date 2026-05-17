@@ -6,6 +6,12 @@ This document gives `docs/SPACING.md` teeth. SPACING.md is the *what* (named buc
 
 If a rule below is violated in `src/app/`, the audit fails and the build fails. There's an escape hatch (see end), but it must live inside a primitive, not in a template.
 
+**Companion docs:**
+- [`SPACING.md`](./SPACING.md) — the 4px scale + named buckets + alignment rules.
+- [`LAYOUT.md`](./LAYOUT.md) — five named structural shells + when to use each.
+- [`NAVIGATION.md`](./NAVIGATION.md) — Button vs LinkButton vs Link wiring rules.
+- [`COMPONENTS.md`](./COMPONENTS.md) — full inventory of every primitive with Paper sheet IDs.
+
 ---
 
 ## Why this exists
@@ -16,7 +22,7 @@ Material UI, IBM Carbon, and Shopify Polaris all prevent this with closed-enum t
 
 ---
 
-## The five rules
+## The seven rules
 
 ### 1 · Text rule
 
@@ -75,6 +81,46 @@ App-shell layouts use `<AppShell>` (`src/components/layout/AppShell.tsx`) with i
 
 If a page needs a layout the primitives don't support, add the layout primitive — don't invent one inline.
 
+See [`LAYOUT.md`](./LAYOUT.md) for the five named shells and when to reach for each.
+
+### 6 · Navigation rule
+
+**A button that changes route is `<LinkButton href>` or a `<Link>`-wrapped Button. A button that performs an in-page command is `<Button onClick>`.**
+
+A plain `<Button>` renders a `<button>` HTML element with no navigation behavior. Adding an `href` prop to `<Button>` does nothing. Use:
+
+| Need | Primitive |
+|---|---|
+| Navigate to an internal route | `<LinkButton href="/path" variant="…" size="…">` |
+| Navigate to an external URL | `<LinkButton href="https://…" external>` |
+| Perform an in-page command (open modal, submit form, toggle state) | `<Button onClick={…}>` |
+| Inline text link inside body copy | `<TextLink href tone size>` |
+| Whole-card click → route | wrap the card with `<Link href>` (Next.js) |
+
+**Enforced by audit.** `no-button-with-href` flags `<Button href=...>`. `no-link-styled-as-button` flags manually-styled `<a>` tags that should be LinkButton.
+
+See [`NAVIGATION.md`](./NAVIGATION.md) for the full rule set + anti-patterns.
+
+### 7 · Heading-vs-Body rule
+
+**`<Heading>` is for short identifiers. Long content belongs in `<Body>`.**
+
+Heading sizes (display 56px / h1 44px / h2 32px / h3 22px / h4 17px) are display weights. Putting a full sentence or paragraph in `<Heading>` produces a visually broken page even when the audit clears. As a rule of thumb: keep heading content under ~80 characters. If the content is descriptive prose, use `<Body size="lead">` instead.
+
+```tsx
+{/* ✓ Right */}
+<PageHeader title="Hepatic adverse events" titleSize="h1" />
+<Body size="lead">
+  Hepatic adverse events occurred in 8.2% of recipients versus 4.1% in
+  placebo. Most events were Grade 1–2 transient ALT elevations.
+</Body>
+
+{/* ✗ Wrong — full claim as title */}
+<PageHeader title={claim.full_text} titleSize="h2" />
+```
+
+**Partially enforced by audit.** `no-long-heading-literal` flags `<Heading>` with > 80 characters of literal text on a single line. JSX-interpolated long content (e.g. `<Heading>{longString}</Heading>`) can't be caught by grep; cover via code review and PageHeader usage discipline.
+
 ---
 
 ## Escape hatch
@@ -117,6 +163,8 @@ Each violation prints `file:line` + the offending snippet + which primitive shou
 
 ## How `/build-hifi` consumes this contract
 
-The `/build-hifi` skill (`~/.claude/skills/build-hifi/SKILL.md`) reads `docs/COMPOSITION.md` before generating any screen. Every AI-generated page satisfies the five rules, and the audit gate prevents regressions when the clone is built.
+The `/build-hifi` skill (`~/.claude/skills/build-hifi/SKILL.md`) reads `docs/COMPOSITION.md`, `docs/NAVIGATION.md`, and `docs/LAYOUT.md` before generating any screen. Every AI-generated page satisfies the seven rules, and the audit gate prevents regressions when the clone is built.
+
+The flight test against the ClaimVault PRD (2026-05-16) validated that the contract holds across 4,800 LOC from 5 parallel agents on first try — Rules 1-5 produced 0 audit violations end-to-end. Rules 6 and 7 were added afterward to address two bug classes the contract didn't yet catch (unwired navigation buttons, body copy in heading slots).
 
 Future skill versions can add tighter checks (PR-level lint, eslint plugin) — but the contract document + the grep gate is the floor.

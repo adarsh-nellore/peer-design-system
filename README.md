@@ -38,7 +38,7 @@ npm run dev
 - **Page-pattern layer** (`src/components/patterns/`) — `<PageHeader>`, `<Prose>`. Canonical compositions.
 - **Brand primitive** (`src/components/ui/PeerBrand.tsx`) — one source of the wordmark.
 - **9 ported page templates** under `src/app/templates/` — all audit-clean.
-- **Composition contract** (`docs/COMPOSITION.md`, `docs/SPACING.md`) + the audit script that gives it teeth.
+- **Composition contract** (`docs/COMPOSITION.md`, `docs/SPACING.md`, `docs/LAYOUT.md`, `docs/NAVIGATION.md`, `docs/COMPONENTS.md`) + the audit script that gives it teeth.
 
 ---
 
@@ -56,7 +56,13 @@ Every page in `src/app/` (excluding `src/app/components/`, the legacy primitive 
 
 Enforced by `scripts/audit-composition.mjs`, wired into `npm run audit` and the `prebuild` hook. Violations fail the build.
 
-Full contract: [`docs/COMPOSITION.md`](./docs/COMPOSITION.md). Underlying scale: [`docs/SPACING.md`](./docs/SPACING.md).
+**Docs:**
+
+- [`docs/COMPOSITION.md`](./docs/COMPOSITION.md) — the seven rules (text, spacing, color, pattern, structural-layout, navigation, heading-vs-body) + the audit script that enforces them.
+- [`docs/SPACING.md`](./docs/SPACING.md) — the underlying 4px scale + named buckets + alignment rules.
+- [`docs/LAYOUT.md`](./docs/LAYOUT.md) — five named structural shells (full-shell / doc-shell / split-shell / prose-shell / narrow-shell) and when to use each.
+- [`docs/NAVIGATION.md`](./docs/NAVIGATION.md) — Button vs LinkButton vs Link wiring rules.
+- [`docs/COMPONENTS.md`](./docs/COMPONENTS.md) — full inventory of every primitive with Paper sheet IDs.
 
 ---
 

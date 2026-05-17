@@ -53,6 +53,23 @@ const RULES = [
     message: "Use semantic token classes (text-ink, bg-coral, …) instead of inline hex.",
     ignoreInComments: true,
   },
+  {
+    id: "no-button-with-href",
+    pattern: /<Button[^/>]*\shref\s*=/,
+    message: "<Button href=...> doesn't navigate — Button is a <button> element. Use <LinkButton href> instead (composes Button with Next.js Link).",
+  },
+  {
+    id: "no-link-styled-as-button",
+    // a plain <a> with button-like background tokens — probably should be LinkButton
+    pattern: /<a[^>]*className=[^>]*\b(?:bg-coral|bg-primary)\b/,
+    message: "Plain <a> tags styled as buttons drift from the contract. Use <LinkButton href variant='primary'> so Button styling stays canonical.",
+  },
+  {
+    id: "no-long-heading-literal",
+    // <Heading ...>literal text > 80 chars</Heading>  — single-line case only
+    pattern: /<Heading[^>]*>([^<{}\n]{81,})<\/Heading>/,
+    message: "<Heading> is for short identifiers. Long content belongs in <Body size='lead|body'>. Keep heading literal text under ~80 chars.",
+  },
 ];
 
 function isSkipped(absPath) {
