@@ -13,10 +13,12 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 const ROOT = new URL("../", import.meta.url).pathname;
-// Scope: only template pages. The /components showcase (src/app/page.tsx) is
-// deliberately hand-rolled to demonstrate primitives and will be moved + split
-// in Phase 4 Step 3. After that, expand this to ["src/app"].
-const SCAN_ROOTS = ["src/app/templates"];
+// Scope: every user-facing page under src/app/ — landing, /templates gallery,
+// every individual template route. The /components showcase is explicitly
+// excluded; it's an internal demonstration of raw primitives in isolation,
+// not a "real" page subject to the composition contract.
+const SCAN_ROOTS = ["src/app"];
+const SKIP_PATHS = ["src/app/components"];
 
 /** @type {{ id: string; pattern: RegExp; message: string; ignoreInComments?: boolean }[]} */
 const RULES = [
@@ -53,7 +55,13 @@ const RULES = [
   },
 ];
 
+function isSkipped(absPath) {
+  const rel = relative(ROOT, absPath);
+  return SKIP_PATHS.some((skip) => rel === skip || rel.startsWith(skip + "/"));
+}
+
 async function* walk(dir) {
+  if (isSkipped(dir)) return;
   const entries = await readdir(dir, { withFileTypes: true });
   for (const entry of entries) {
     const full = join(dir, entry.name);
@@ -61,7 +69,7 @@ async function* walk(dir) {
       if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
       yield* walk(full);
     } else if (/\.(tsx|ts|jsx|js)$/.test(entry.name)) {
-      yield full;
+      if (!isSkipped(full)) yield full;
     }
   }
 }
@@ -101,7 +109,7 @@ async function main() {
   }
 
   if (violations.length === 0) {
-    console.log("✓ composition audit: 0 violations across " + SCAN_ROOTS.join(", "));
+    console.log("✓ composition audit: 0 violations across " + SCAN_ROOTS.join(", ") + (SKIP_PATHS.length ? " (skipping " + SKIP_PATHS.join(", ") + ")" : ""));
     process.exit(0);
   }
 
