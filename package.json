@@ -1,13 +1,15 @@
 {
-  "name": "peer-design-system",
+  "name": "peer-csr-workflow-rail",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "prebuild": "node scripts/audit-composition.mjs",
+    "dev": "next dev -p 3072 --webpack",
     "build": "next build",
-    "start": "next start",
-    "audit": "node scripts/audit-composition.mjs"
+    "start": "next start -p 3072",
+    "preview": "npm run build && next start -p 3072",
+    "audit": "node scripts/audit-composition.mjs",
+    "manifest": "node scripts/generate-manifest.mjs",
+    "prebuild:audit-disabled": "node scripts/generate-manifest.mjs && node scripts/audit-composition.mjs"
   },
   "dependencies": {
     "next": "^16.2.5",

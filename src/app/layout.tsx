@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Inconsolata, Fraunces } from "next/font/google";
 import "./globals.css";
+import { ClientProviders } from "@/components/ClientProviders";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,8 +23,8 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "adarsh-design-system",
-  description: "Portable component library, seeded from peer-prototype.",
+  title: "Peer CSR Workflow Rail",
+  description: "CSR workflow orchestration prototype for Peer AI design exercise.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${inter.variable} ${inconsolata.variable} ${fraunces.variable} h-full`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="h-full overflow-hidden">
+        <ClientProviders>{children}</ClientProviders>
+      </body>
     </html>
   );
 }

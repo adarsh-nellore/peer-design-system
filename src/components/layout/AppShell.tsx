@@ -5,6 +5,15 @@ import { cn } from "@/lib/cn";
  * Top-level application shell. Slots: topBar (56px) + horizontal flex with
  * leftNav (optional) + main (flex-1) + rightRail (optional).
  *
+ * Desktop-resilience contract (see docs/LAYOUT.md):
+ *   - Supported minimum viewport width is 1280px.
+ *   - Outer container is `overflow-x-hidden` so a runaway child never
+ *     produces horizontal page scroll. Wide content (tables, code blocks,
+ *     etc.) must opt in to horizontal scroll via its own
+ *     `overflow-x-auto min-w-0` wrapper.
+ *   - Main column carries `min-w-0` so its flex children can shrink below
+ *     their intrinsic content width. Do not remove it.
+ *
  * Extracted from Paper artboard v2·0 (PeerAIDesign):
  *   outer:    flex flex-col bg-white
  *   top bar:  h-14 px-6 gap-4 border-b border-[#D5DDE3]
@@ -37,7 +46,7 @@ export function AppShell({
   return (
     <div
       className={cn(
-        "absolute inset-0 flex flex-col bg-surface text-ink antialiased",
+        "absolute inset-0 flex flex-col overflow-x-hidden bg-surface text-ink antialiased",
         className
       )}
     >
