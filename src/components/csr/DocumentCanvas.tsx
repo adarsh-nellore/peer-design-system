@@ -21,20 +21,16 @@ type DocumentCanvasProps = {
 
 function ProseWithDrift({
   text,
-  paragraph,
   docId,
-  tab,
 }: {
   text: string;
-  paragraph: DocParagraph;
   docId: string;
-  tab: string;
 }) {
   const drift1 = driftMarkers.find((d) => d.sectionId === "sec-10" && text.includes("612"));
   if (drift1 && text.includes("612")) {
     const parts = text.split("612");
     return (
-      <Body size="small" measured={false} tone="ink">
+      <>
         {parts[0]}
         <DriftInlineMarker
           marker={{ ...drift1, anchorText: "612 participants" }}
@@ -42,14 +38,10 @@ function ProseWithDrift({
           href={docPath(docId, { tab: "workflow", panel: "quorum" })}
         />
         {parts.slice(1).join("612")}
-      </Body>
+      </>
     );
   }
-  return (
-    <Body size="small" measured={false} tone="ink">
-      {text}
-    </Body>
-  );
+  return <>{text}</>;
 }
 
 function DataTable({ paragraph }: { paragraph: DocParagraph }) {
@@ -105,7 +97,7 @@ export function DocumentCanvas({ docId, section, tab }: DocumentCanvasProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.32, ease: "easeOut" }}
-      className="flex-1 min-h-0 overflow-y-auto scroll-tame bg-paper px-10 py-8"
+      className="flex-1 min-h-0 overflow-y-auto scroll-tame bg-paper px-4 py-6 md:px-8 md:py-8 lg:px-10"
       data-wt="doc-canvas"
     >
       <Heading size="h2" className="mb-1">
@@ -121,37 +113,53 @@ export function DocumentCanvas({ docId, section, tab }: DocumentCanvasProps) {
             .map((id) => inlineDriftById(id))
             .filter(Boolean);
 
+          const driftTags = drifts.map(
+            (d) =>
+              d && (
+                <InlineDriftCallout
+                  key={d.id}
+                  drift={d}
+                  workflowHref={docPath(docId, {
+                    tab: "workflow",
+                    panel: "quorum",
+                    activity: d.resolveActivityId,
+                  })}
+                  activityHref={
+                    d.resolveActivityId
+                      ? docPath(docId, { tab: "workflow", activity: d.resolveActivityId })
+                      : undefined
+                  }
+                />
+              )
+          );
+
           return (
             <motion.div
               key={para.anchor}
               {...stagger(i)}
               className="anim-fade-in"
             >
-              {drifts.map(
-                (d) =>
-                  d && (
-                    <InlineDriftCallout
-                      key={d.id}
-                      drift={d}
-                      workflowHref={docPath(docId, {
-                        tab: "workflow",
-                        panel: "quorum",
-                        activity: d.resolveActivityId,
-                      })}
-                      activityHref={
-                        d.resolveActivityId
-                          ? docPath(docId, { tab: "workflow", activity: d.resolveActivityId })
-                          : undefined
-                      }
-                    />
-                  )
-              )}
-
               {para.kind === "prose" && para.text && (
-                <ProseWithDrift text={para.text} paragraph={para} docId={docId} tab={tab} />
+                <Body size="small" measured={false} tone="ink" className="leading-relaxed">
+                  <ProseWithDrift text={para.text} docId={docId} />
+                  {driftTags.length > 0 && (
+                    <span className="inline-flex flex-wrap items-center gap-1.5 ml-1.5 align-middle">
+                      {driftTags}
+                    </span>
+                  )}
+                </Body>
               )}
 
-              {para.kind === "table" && <DataTable paragraph={para} />}
+              {para.kind === "table" && (
+                <>
+                  <DataTable paragraph={para} />
+                  {driftTags.length > 0 && (
+                    <p className="mt-2 mb-4 flex flex-wrap items-center gap-1.5">
+                      {driftTags}
+                    </p>
+                  )}
+                </>
+              )}
 
               {para.source && (
                 <Link
