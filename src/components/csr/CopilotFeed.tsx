@@ -1,14 +1,14 @@
 "use client";
 
-import Link from "next/link";
-import { motion } from "framer-motion";
 import { copilotMessages } from "@/lib/mock-data";
 import { resolveActionHref } from "@/lib/csr-urls";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { LinkButton } from "@/components/layout/LinkButton";
 import { Cluster } from "@/components/layout/Cluster";
+import { Stack } from "@/components/layout/Stack";
 import { MetaText } from "@/components/ui/MetaText";
-import { stagger } from "@/lib/motion";
+import { TextLink } from "@/components/ui/TextLink";
 
 type CopilotFeedProps = {
   docId: string;
@@ -23,7 +23,7 @@ const modeLabel: Record<string, string> = {
   user: "You",
 };
 
-function CopilotActions({
+function MessageActions({
   docId,
   primary,
   secondary,
@@ -33,80 +33,80 @@ function CopilotActions({
   secondary?: { label: string; href: string };
 }) {
   if (!primary && !secondary) return null;
+
   return (
-    <motion.div
-      className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1"
-      layout
-    >
-      {primary && (
-        <Link
-          href={resolveActionHref(docId, primary.href)}
-          className="text-[11px] leading-none font-medium text-coral hover:underline shrink-0"
-        >
-          {primary.label}
-        </Link>
-      )}
-      {secondary && (
-        <Link
-          href={resolveActionHref(docId, secondary.href)}
-          className="text-[11px] leading-none text-muted hover:text-ink hover:underline shrink-0"
-        >
-          {secondary.label}
-        </Link>
-      )}
-    </motion.div>
+    <div className="mt-3 border-t border-hairline pt-2.5">
+      <div className="grid grid-cols-2 gap-2">
+        {primary && (
+          <LinkButton
+            href={resolveActionHref(docId, primary.href)}
+            variant="primary"
+            size="sm"
+            className="w-full justify-center"
+          >
+            {primary.label}
+          </LinkButton>
+        )}
+        {secondary && (
+          <LinkButton
+            href={resolveActionHref(docId, secondary.href)}
+            variant="secondary"
+            size="sm"
+            className="w-full justify-center"
+          >
+            {secondary.label}
+          </LinkButton>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PeerHeader({ label }: { label: string }) {
+  return (
+    <Cluster gap="cozy" align="center" className="mb-2">
+      <span
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-coral text-[10px] font-semibold text-white"
+        aria-hidden
+      >
+        P
+      </span>
+      <MetaText tone="faint" size="sm">
+        Peer · <span className="font-medium text-ink">{label}</span>
+      </MetaText>
+    </Cluster>
   );
 }
 
 export function CopilotFeed({ docId }: CopilotFeedProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex flex-col flex-1 min-h-0 min-w-0"
-    >
-      <div className="flex flex-col gap-2 flex-1 min-h-0 min-w-0 overflow-y-auto scroll-tame px-3 py-3 pb-16">
-        {copilotMessages.map((msg, i) => {
-          const isDrift = msg.mode === "drift";
-          const isHandoff = msg.mode === "handoff";
-
-          return (
-            <motion.article
-              key={msg.id}
-              {...stagger(i, 0.04)}
-              className="min-w-0 rounded-md border border-hairline bg-paper px-2.5 py-2 shadow-sm"
-            >
-              {isDrift ? (
-                <>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="w-0.5 h-3 rounded-full bg-gold shrink-0" aria-hidden />
-                    <MetaText tone="ink" size="sm" className="font-medium text-xs">
-                      {msg.title ?? "Version drift"}
+    <div className="flex h-full min-h-0 min-w-0 w-full flex-col" data-copilot-feed="v2">
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto scroll-tame">
+        <Stack gap="comfortable" className="p-3">
+          {copilotMessages.map((msg) => {
+            if (msg.mode === "handoff") {
+              return (
+                <Card
+                  key={msg.id}
+                  variant="soft"
+                  padding="sm"
+                  className="border-l-2 border-l-info"
+                >
+                  <Cluster justify="between" align="center" className="mb-2">
+                    <MetaText tone="ink" size="sm" className="font-semibold">
+                      {msg.title ?? "Review handoff"}
                     </MetaText>
-                  </div>
-                  <p className="text-[11px] leading-snug text-muted">{msg.body}</p>
-                  <CopilotActions docId={docId} primary={msg.ctaPrimary} secondary={msg.ctaSecondary} />
-                </>
-              ) : isHandoff ? (
-                <>
-                  <Cluster gap="tight" align="center" justify="between" className="mb-1 min-w-0">
-                    <MetaText tone="ink" size="sm" className="font-medium text-xs truncate">
-                      {msg.title ?? "Handoff"}
-                    </MetaText>
-                    {msg.badge && (
-                      <Badge tone="info" className="shrink-0 text-[10px]">
-                        {msg.badge}
-                      </Badge>
-                    )}
+                    {msg.badge && <Badge tone="info">{msg.badge}</Badge>}
                   </Cluster>
-                  <p className="text-[11px] leading-snug text-muted mb-2">{msg.body}</p>
-                  <Cluster gap="tight" wrap className="min-w-0">
+                  <MetaText tone="default" size="sm" className="mb-3 block leading-relaxed">
+                    {msg.body}
+                  </MetaText>
+                  <Cluster gap="cozy" wrap>
                     {msg.ctaPrimary && (
                       <LinkButton
                         href={resolveActionHref(docId, msg.ctaPrimary.href)}
                         variant="primary"
                         size="sm"
-                        className="!text-[11px] !px-2 !py-1 !min-h-0"
                       >
                         {msg.ctaPrimary.label}
                       </LinkButton>
@@ -116,51 +116,85 @@ export function CopilotFeed({ docId }: CopilotFeedProps) {
                         href={resolveActionHref(docId, msg.ctaSecondary.href)}
                         variant="secondary"
                         size="sm"
-                        className="!text-[11px] !px-2 !py-1 !min-h-0"
                       >
                         {msg.ctaSecondary.label}
                       </LinkButton>
                     )}
                   </Cluster>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-1.5 mb-1 min-w-0">
-                    <span className="h-4 w-4 rounded-full bg-coral text-white text-[9px] flex items-center justify-center font-medium shrink-0">
-                      P
-                    </span>
-                    <MetaText tone="faint" size="sm" className="text-[10px] truncate">
-                      Peer · <span className="text-muted">{modeLabel[msg.mode] ?? msg.title}</span>
-                    </MetaText>
-                  </div>
-                  <p className="text-[11px] leading-snug text-ink">{msg.body}</p>
-                  <CopilotActions
-                    docId={docId}
-                    primary={msg.ctaPrimary}
-                    secondary={msg.ctaSecondary}
-                  />
-                </>
-              )}
-            </motion.article>
-          );
-        })}
+                </Card>
+              );
+            }
+
+            if (msg.mode === "drift") {
+              return (
+                <Card
+                  key={msg.id}
+                  variant="paper"
+                  padding="sm"
+                  className="border-l-2 border-l-gold bg-gold-soft/30"
+                >
+                  <MetaText tone="ink" size="sm" className="mb-1.5 block font-semibold">
+                    {msg.title ?? "Version drift"}
+                  </MetaText>
+                  <MetaText tone="default" size="sm" className="mb-2 block leading-relaxed">
+                    {msg.body}
+                  </MetaText>
+                  <Stack gap="tight">
+                    {msg.ctaPrimary && (
+                      <TextLink
+                        href={resolveActionHref(docId, msg.ctaPrimary.href)}
+                        tone="coral"
+                        size="sm"
+                        trailingArrow
+                      >
+                        {msg.ctaPrimary.label}
+                      </TextLink>
+                    )}
+                    {msg.ctaSecondary && (
+                      <TextLink
+                        href={resolveActionHref(docId, msg.ctaSecondary.href)}
+                        tone="muted"
+                        size="sm"
+                      >
+                        {msg.ctaSecondary.label}
+                      </TextLink>
+                    )}
+                  </Stack>
+                </Card>
+              );
+            }
+
+            return (
+              <Card key={msg.id} variant="paper" padding="sm">
+                <PeerHeader label={modeLabel[msg.mode] ?? msg.title ?? "Copilot"} />
+                <MetaText tone="ink" size="sm" className="block leading-relaxed">
+                  {msg.body}
+                </MetaText>
+                <MessageActions
+                  docId={docId}
+                  primary={msg.ctaPrimary}
+                  secondary={msg.ctaSecondary}
+                />
+              </Card>
+            );
+          })}
+        </Stack>
       </div>
 
-      <div className="shrink-0 border-t border-hairline-strong px-3 py-2 bg-paper">
-        <div className="flex items-center gap-2 min-w-0 rounded-md border border-hairline bg-soft px-2.5 py-1.5">
-          <span className="text-[11px] text-faint flex-1 min-w-0 truncate">
+      <div className="shrink-0 border-t border-hairline-strong bg-paper p-3">
+        <Cluster
+          gap="cozy"
+          align="center"
+          className="rounded-md border border-hairline-strong bg-soft px-3 py-2"
+        >
+          <span className="min-w-0 flex-1 truncate text-[13px] text-faint">
             Ask Peer about this section…
           </span>
-          <LinkButton
-            href={resolveActionHref(docId, "tab:qc")}
-            variant="primary"
-            size="sm"
-            className="!text-[11px] !px-2 !py-1 !min-h-0 shrink-0"
-          >
+          <LinkButton href={resolveActionHref(docId, "tab:qc")} variant="primary" size="sm">
             Send
           </LinkButton>
-        </div>
+        </Cluster>
       </div>
-    </motion.div>
+    </div>
   );
 }
